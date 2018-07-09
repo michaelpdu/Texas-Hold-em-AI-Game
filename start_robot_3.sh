@@ -1,1 +1,1 @@
-python player.py 0xBADDC0DE-03
+python player_rule.py 0xBADDC0DE-03
