@@ -10,7 +10,7 @@ Create Game --> Table number is 9090 --> confirm
 
 ## Features
 
-There are 4 models for this game: model_for_hands, model_for_board3, model_for_board4 and model_for_board5.
+There are 4 models for this game: `model_for_hands`, `model_for_board3`, `model_for_board4` and `model_for_board5`.
 
 Feature list:
 
