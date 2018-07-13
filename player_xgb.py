@@ -6,6 +6,7 @@ from card_util import *
 import multiprocessing
 import xgboost as xgb
 from feature_util import *
+import numpy as np
 
 class PlayerXGB:
     """"""
@@ -91,8 +92,8 @@ class PlayerXGB:
         elif event_name == "__bet" or event_name == "__action":
             self.calc_pre_max_bet(data)
             if len(data['game']['board']) == 0:
-                # self.take_action_by_hand(event_name, data)
-                self.take_action_by_hand_mode(event_name, data)
+                self.take_action_by_hand(event_name, data)
+                # self.take_action_by_hand_mode(event_name, data)
             else:
                 # self.take_action_by_deuces(event_name, data)
                 self.take_action_by_model(event_name, data)
@@ -181,7 +182,9 @@ class PlayerXGB:
         rank, features = get_rank_of_hand_cards(self.hand_cards_[0], self.hand_cards_[1])
         self.features_ = features
         X = convert_to_libsvm_format(0, features)
-        testing_set = xgb.DMatrix(X)
+        with open('tmp.txt', 'w') as fh:
+            fh.write(X)
+        testing_set = xgb.DMatrix('tmp.txt')
         y_pred = self.model_hands_.predict(testing_set)
         if y_pred[0] >= 0.5:
             return 1
@@ -190,7 +193,7 @@ class PlayerXGB:
 
     def predict_by_board3_model(self):
         for i in range(0, 3):
-            self.features_.update(self.board_cards_[i])
+            self.features_.update(convert_card_to_feature(self.board_cards_[i]))
 
         evaluator = Evaluator()
         rank = evaluator.evaluate(self.board_cards_, self.hand_cards_)
@@ -198,15 +201,18 @@ class PlayerXGB:
         self.features_[100] = percentage
 
         X = convert_to_libsvm_format(0, self.features_)
-        testing_set = xgb.DMatrix(X)
+        with open('tmp.txt', 'w') as fh:
+            fh.write(X)
+        testing_set = xgb.DMatrix('tmp.txt')
         y_pred = self.model_hands_.predict(testing_set)
+        print("Probability: {}".format(y_pred))
         if y_pred[0] >= 0.5:
             return 1
         else:
             return 0
 
     def predict_by_board4_model(self):
-        self.features_.update(self.board_cards_[3])
+        self.features_.update(convert_card_to_feature(self.board_cards_[3]))
 
         evaluator = Evaluator()
         rank = evaluator.evaluate(self.board_cards_, self.hand_cards_)
@@ -217,7 +223,9 @@ class PlayerXGB:
         self.features_[110] = gap_board_4 / 2000
 
         X = convert_to_libsvm_format(0, self.features_)
-        testing_set = xgb.DMatrix(X)
+        with open('tmp.txt', 'w') as fh:
+            fh.write(X)
+        testing_set = xgb.DMatrix('tmp.txt')
         y_pred = self.model_hands_.predict(testing_set)
         if y_pred[0] >= 0.5:
             return 1
@@ -225,7 +233,7 @@ class PlayerXGB:
             return 0
 
     def predict_by_board5_model(self):
-        self.features_.update(self.board_cards_[4])
+        self.features_.update(convert_card_to_feature(self.board_cards_[4]))
 
         evaluator = Evaluator()
         rank = evaluator.evaluate(self.board_cards_, self.hand_cards_)
@@ -236,7 +244,9 @@ class PlayerXGB:
         self.features_[111] = gap / 2000
 
         X = convert_to_libsvm_format(0, self.features_)
-        testing_set = xgb.DMatrix(X)
+        with open('tmp.txt', 'w') as fh:
+            fh.write(X)
+        testing_set = xgb.DMatrix('tmp.txt')
         y_pred = self.model_hands_.predict(testing_set)
         if y_pred[0] >= 0.5:
             return 1

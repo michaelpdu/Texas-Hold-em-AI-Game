@@ -1,7 +1,9 @@
 import sys
+import copy
 from deuces import Deck, Evaluator
 from card_util import *
 from feature_util import *
+
 
 def get_winner(board, hands):
     for hand in hands:
@@ -27,17 +29,18 @@ def get_winner(board, hands):
 
 def main():
     count = int(sys.argv[1])
+    name = sys.argv[2]
     verbose = True
 
-    samples_for_hand = open('sample_for_hand.txt', 'w')
-    samples_for_board3 = open('sample_for_board3.txt', 'w')
-    samples_for_board4 = open('sample_for_board4.txt', 'w')
-    samples_for_board5 = open('sample_for_board5.txt', 'w')
+    samples_for_hand = open('{}_hand.txt'.format(name), 'w')
+    samples_for_board3 = open('{}_board3.txt'.format(name), 'w')
+    samples_for_board4 = open('{}_board4.txt'.format(name), 'w')
+    samples_for_board5 = open('{}_board5.txt'.format(name), 'w')
 
     index = 0
     while index < count:
         #
-        player_number = 10
+        player_number = 5
         hands = []
         hands_features = []
         board3_features = []
@@ -67,7 +70,7 @@ def main():
 
         evaluator = Evaluator()
 
-        board3_features = hands_features[:]
+        board3_features = copy.deepcopy(hands_features)
         assert len(hands) == len(board3_features), "ERROR: length of hand and features does not match!"
         for i in range(0, len(hands)):
             board3_features[i].update(bf0)
@@ -77,6 +80,7 @@ def main():
             rank = evaluator.evaluate(board, hands[i])
             percentage = 1.0 - evaluator.get_five_card_rank_percentage(rank)
             board3_features[i][100] = percentage
+            # print("Board3 percentage: {}".format(percentage))
 
 
         # -----------
@@ -89,7 +93,7 @@ def main():
         bf2 = convert_card_to_feature(board[2])
         bf3 = convert_card_to_feature(board[3])
 
-        board4_features = board3_features[:]
+        board4_features = copy.deepcopy(board3_features)
         for i in range(0, len(hands)):
             board4_features[i].update(bf3)
 
@@ -112,7 +116,7 @@ def main():
         bf3 = convert_card_to_feature(board[3])
         bf4 = convert_card_to_feature(board[4])
 
-        board5_features = board4_features[:]
+        board5_features = copy.deepcopy(board4_features)
         for i in range(0, len(hands)):
             board5_features[i].update(bf4)
 

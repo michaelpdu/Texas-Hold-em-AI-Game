@@ -1,1 +1,1 @@
-python main.py 0xBADDC0DE-04
+python main.py 0xBADDC0DE-04 xgb
