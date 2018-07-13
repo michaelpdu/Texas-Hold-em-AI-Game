@@ -28,6 +28,18 @@ class Player:
         data = msg["data"]
         self.process_data(event_name, data)
 
+    def calc_pre_max_bet(self, data):
+        # maximum bet
+        self.pre_max_bet_ = 0
+        for player in data['game']['players']:
+            if player['bet'] > self.pre_max_bet_:
+                self.pre_max_bet_ = player['bet']
+        print("Previous Max Bet: {}".format(self.pre_max_bet_))
+
+    def get_big_blind(self, data):
+        big_blind = data['game']['bigBlind']['amount']
+        return big_blind
+
     def process_data(self, event_name, data):
         print("Event Name: " + event_name)
 
@@ -47,6 +59,7 @@ class Player:
                     print_deuces_card(self.hand_cards_)
                     print("***************************")
         elif event_name == "__bet" or event_name == "__action":
+            self.calc_pre_max_bet(data)
             if len(data['game']['board']) == 0:
                 self.take_action_by_hand(event_name, data)
             else:
@@ -72,27 +85,16 @@ class Player:
     def take_action_by_deuces(self, event_name, data):
         board_cards_count = self.get_board_cards(data)
         assert(board_cards_count >= 3)
+        big_blind = self.get_big_blind(data)
 
         evaluator = Evaluator()
         value = evaluator.evaluate(self.board_cards_, self.hand_cards_)
         print("Evaluation: {}".format(value))
 
         # calculate value of hand cards
-        if len(self.board_cards_) == 5:
-            board_value = evaluator.evaluate(self.board_cards_, [])
-            gap = abs(value - board_value)
-            print("(5 Board Cards) Gap: {}".format(gap))
+        if len(self.board_cards_) > 3:
+            gap = get_gap_between_hands_and_board(self.hand_cards_, self.board_cards_)
             if gap < 20:
-                self.take_action_fold()
-                return
-        elif len(self.board_cards_) == 4:
-            v1 = evaluator.evaluate(self.board_cards_, [self.hand_cards_[0]])
-            v2 = evaluator.evaluate(self.board_cards_, [self.hand_cards_[1]])
-            gap1 = abs(value - v1)
-            gap2 = abs(value - v2)
-            max_gap = max(gap1, gap2)
-            print("(4 Board Cards) V1: {}, V2: {}, Gap1: {}, Gap2: {}, Max Gap: {}".format(v1, v2, gap1, gap2, max_gap))
-            if max_gap < 20:
                 self.take_action_fold()
                 return
         elif len(self.board_cards_) == 3:
@@ -100,38 +102,44 @@ class Player:
         else:
             pass
 
-        if value < 1000:
-            self.take_action_bet(1000)
+        if value < 500:
+            self.tak_action_allin()
+        elif value < 1000:
+            self.take_action_bet(5*big_blind)
         elif value < 2000:
-            self.take_action_bet(500)
+            self.take_action_bet(3*big_blind)
         elif value < 3000:
-            self.take_action_bet(300)
+            self.take_action_bet(2*big_blind)
         elif value < 4000:
-            self.take_action_bet(100)
-        elif value < 5500:
-            self.take_action_bet(50)
-        elif value < 6800:
-            self.take_action_call()
+            if self.pre_max_bet_-big_blind < 300:
+                self.take_action_call()
+            else:
+                self.take_action_fold()
+        elif value < 5000:
+            if self.pre_max_bet_-big_blind < 200:
+                self.take_action_call()
+            else:
+                self.take_action_fold()
+        elif value < 6000:
+            if self.pre_max_bet_-big_blind < 100:
+                self.take_action_call()
+            else:
+                self.take_action_fold()
         else:
             self.take_action_fold()
 
     def take_action_by_hand(self, event_name, data):
         print("Take action by hand cards")
         print(data)
+        big_blind = self.get_big_blind(data)
 
-        # maximum bet
-        max_bet = 0
-        for player in data['game']['players']:
-            if player['bet'] > max_bet:
-                max_bet = player['bet']
-        print("Max bet in hand cards: {}".format(max_bet))
-        rank = get_rank_of_hand_cards(self.hand_cards_[0], self.hand_cards_[1])
+        rank, features = get_rank_of_hand_cards(self.hand_cards_[0], self.hand_cards_[1])
         print("Rank of hand cards: {}".format(rank))
         if rank > 6:
             self.take_action_call()
-        elif rank > 3 and max_bet < 500:
+        elif rank > 3 and (self.pre_max_bet_ - big_blind) < 200:
             self.take_action_call()
-        elif rank > 1 and max_bet < 200:
+        elif rank >= 1 and (self.pre_max_bet_ - big_blind) < 100:
             self.take_action_call()
         else:
             self.take_action_fold()

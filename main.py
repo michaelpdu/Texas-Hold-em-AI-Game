@@ -1,8 +1,9 @@
 import sys
 from player import Player
 
-server = "ws://poker-dev.wrs.club:3001/"
-# server = "ws://10.64.8.72:80/"
+# server = "ws://pokerai.trendmicro.com.cn:80/"
+# server = "ws://poker-dev.wrs.club:3001/"
+server = "ws://10.64.8.72:80/"
 
 def doListen(player_name):
     try:
