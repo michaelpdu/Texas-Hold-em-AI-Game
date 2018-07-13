@@ -17,10 +17,10 @@ class PlayerXGB:
         self.hand_cards_ = []
         self.board_cards_ = []
 
-        self.model_path_hands_ = ""
-        self.model_path_board_3_ = ""
-        self.model_path_board_4_ = ""
-        self.model_path_board_5_ = ""
+        self.model_path_hands_ = "model_for_hands.xgb"
+        self.model_path_board_3_ = "model_for_board3.xgb"
+        self.model_path_board_4_ = "model_for_board4.xgb"
+        self.model_path_board_5_ = "model_for_board5.xgb"
 
         self.model_hands_ = None
         self.model_board_3_ = None
